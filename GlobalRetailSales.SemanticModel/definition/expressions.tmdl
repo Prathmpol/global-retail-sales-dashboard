@@ -1,0 +1,5 @@
+expression FilePath = "C:\Users\prath\Downloads\GlobalSuperstore Data.xlsx" meta [IsParameterQuery=true, Type="Text", IsParameterQueryRequired=true]
+	lineageTag: 980d1a6f-b92a-439a-bc17-97de383cc19b
+
+	annotation PBI_ResultType = Text
+

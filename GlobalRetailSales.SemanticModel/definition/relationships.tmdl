@@ -1,0 +1,19 @@
+relationship orders_people
+	fromColumn: Orders.Region
+	toColumn: People.Region
+
+relationship d5deac33-02c0-4481-a3f3-35b39d000fe6
+	joinOnDateBehavior: datePartOnly
+	fromColumn: Orders.'Order Date'
+	toColumn: LocalDateTable_81aad0ef-9b65-4843-89a6-5e7d4a91ca33.Date
+
+relationship 20dde6ae-ace3-4bc8-b3de-aac98956bfbd
+	joinOnDateBehavior: datePartOnly
+	fromColumn: Orders.'Ship Date'
+	toColumn: LocalDateTable_86ed1169-c322-437e-a513-55e7fb0cdb89.Date
+
+relationship b162880a-b6be-451f-a57b-5cc7d41aff48
+	joinOnDateBehavior: datePartOnly
+	fromColumn: Orders.'Month Start'
+	toColumn: LocalDateTable_624870a2-94ae-4638-b2ac-a8abde4bc54c.Date
+

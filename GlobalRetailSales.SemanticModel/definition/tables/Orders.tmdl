@@ -1,0 +1,302 @@
+table Orders
+	lineageTag: f6565a00-3abb-425f-a824-2d129c3301ae
+
+	measure 'Total Sales' = SUM(Orders[Sales])
+		formatString: $#,0
+		lineageTag: 75ae6035-12e6-477c-a3cb-d9f8b4c607b0
+
+	measure 'Total Profit' = SUM(Orders[Profit])
+		formatString: $#,0
+		lineageTag: e6e59aaf-4531-4ef7-87d0-4d2bc66b7868
+
+	measure 'Total Quantity' = SUM(Orders[Quantity])
+		formatString: #,0
+		lineageTag: 1f083dbb-974b-4ec8-9e96-59ab4c8b4142
+
+	measure 'Profit Margin Measure' = DIVIDE([Total Profit], [Total Sales])
+		formatString: 0.0%
+		lineageTag: 8e445fae-a529-41b4-9062-74d6ebb15fdb
+
+	measure 'Total Returned Orders' = CALCULATE(DISTINCTCOUNT(Orders[Order ID]), Orders[Returned Flag] = 1)
+		formatString: #,0
+		lineageTag: 7b9841f3-22e5-407e-a094-fca0eb363669
+
+	measure 'Return Rate %' = DIVIDE([Total Returned Orders], DISTINCTCOUNT(Orders[Order ID]))
+		formatString: 0.0%
+		lineageTag: 18f29e63-d86a-468b-bece-d246a40632ff
+
+	measure 'Average Shipping Cost' = AVERAGE(Orders[Shipping Cost])
+		formatString: $#,0.00
+		lineageTag: 7956e9f7-56c7-4f58-8011-0825ddb56477
+
+	measure 'Total Orders' = DISTINCTCOUNT(Orders[Order ID])
+		formatString: #,0
+		lineageTag: 06e31cdd-1b62-4764-86a0-195ad166d564
+
+	measure 'Average Order Value' = DIVIDE([Total Sales], [Total Orders])
+		formatString: $#,0.00
+		lineageTag: b5373a72-f9ce-4faa-bb39-926eaaafdeb0
+
+	/// Latest year in the current filter vs the year before it. With no year selected, the latest year in the data vs the prior year.
+	measure 'Sales YoY %' =
+			VAR y = MAX(Orders[Year])
+			VAR cur = [Total Sales]
+			VAR py = CALCULATE([Total Sales], REMOVEFILTERS(Orders[Year]), REMOVEFILTERS(Orders[Month Start]), Orders[Year] = y - 1)
+			RETURN IF(NOT ISBLANK(py), DIVIDE(cur - py, py))
+		formatString: +0.0%;-0.0%;0.0%
+		displayFolder: Growth
+		lineageTag: 9f98af6f-b153-44e7-9610-e7a6ed00d670
+
+	measure 'Total Customers' = DISTINCTCOUNT(Orders[Customer ID])
+		formatString: #,0
+		lineageTag: 9e6aa9f6-4d26-4fa4-9c05-8c3f7fc24cea
+
+	measure 'Segment Sales Share %' = DIVIDE([Total Sales], CALCULATE([Total Sales], REMOVEFILTERS(Orders[Segment])))
+		formatString: 0.0%
+		lineageTag: ee871da7-51e7-4599-80ac-a99f8095f368
+
+	measure 'Market Sales Share %' = DIVIDE([Total Sales], CALCULATE([Total Sales], REMOVEFILTERS(Orders[Market])))
+		formatString: 0.0%
+		lineageTag: ce5f125a-adb6-4eeb-a2ed-6d4c7067cfd6
+
+	measure 'Selected Region' = SELECTEDVALUE(Orders[Region], "All Regions")
+		lineageTag: ac8c046a-7d1d-411a-b86b-61d83394d54c
+
+	measure 'Sales PY' =
+			VAR y = MAX(Orders[Year])
+			RETURN CALCULATE([Total Sales], REMOVEFILTERS(Orders[Year]), REMOVEFILTERS(Orders[Month Start]), Orders[Year] = y - 1)
+		formatString: $#,0
+		displayFolder: Growth
+		lineageTag: 2965b06d-a3fd-42e4-9e6d-4714b7d409e5
+
+	measure 'Profit YoY %' =
+			VAR y = MAX(Orders[Year])
+			VAR cur = [Total Profit]
+			VAR py = CALCULATE([Total Profit], REMOVEFILTERS(Orders[Year]), REMOVEFILTERS(Orders[Month Start]), Orders[Year] = y - 1)
+			RETURN IF(NOT ISBLANK(py), DIVIDE(cur - py, py))
+		formatString: +0.0%;-0.0%;0.0%
+		displayFolder: Growth
+		lineageTag: 6ad6c1fa-265a-4e32-97cb-57d8c0a48602
+
+	measure 'Average Discount' = AVERAGE(Orders[Discount])
+		formatString: 0.0%
+		lineageTag: 8f3d0361-bc91-401e-8925-ad1a5f5b2c6a
+
+	measure 'Loss-Making Lines %' = DIVIDE(COUNTROWS(FILTER(Orders, Orders[Profit] < 0)), COUNTROWS(Orders))
+		formatString: 0.0%
+		lineageTag: a8bcd7cf-7ba6-4987-b815-93d94ea3cf55
+
+	measure 'Top Region' = MAXX(TOPN(1, VALUES(Orders[Region]), [Total Sales]), Orders[Region])
+		displayFolder: Insights
+		lineageTag: 9b653bba-5559-4335-8a0a-4dfec6177ebb
+
+	measure 'Top Sub-Category' = MAXX(TOPN(1, VALUES(Orders[Sub-Category]), [Total Profit]), Orders[Sub-Category])
+		displayFolder: Insights
+		lineageTag: 5fb08711-8b18-481c-b7df-437efffab31d
+
+	measure 'Top Market' = MAXX(TOPN(1, VALUES(Orders[Market]), [Total Sales]), Orders[Market])
+		displayFolder: Insights
+		lineageTag: aaf025d0-0c31-418b-9404-02074723c623
+
+	column 'Order ID'
+		dataType: string
+		lineageTag: 15f554c7-237f-4a49-a3dc-229cfd070f53
+		summarizeBy: none
+		sourceColumn: Order ID
+
+	column 'Order Date'
+		dataType: dateTime
+		formatString: dd mmm yyyy
+		lineageTag: 3dbce81a-d7b6-4820-b811-6366cc012fe7
+		summarizeBy: none
+		sourceColumn: Order Date
+
+		variation Variation
+			isDefault
+			relationship: d5deac33-02c0-4481-a3f3-35b39d000fe6
+			defaultHierarchy: LocalDateTable_81aad0ef-9b65-4843-89a6-5e7d4a91ca33.'Date Hierarchy'
+
+		annotation UnderlyingDateTimeDataType = Date
+
+	column 'Ship Date'
+		dataType: dateTime
+		formatString: dd mmm yyyy
+		lineageTag: 6ae31ba4-0511-4f00-ab40-b369c10b80a4
+		summarizeBy: none
+		sourceColumn: Ship Date
+
+		variation Variation
+			isDefault
+			relationship: 20dde6ae-ace3-4bc8-b3de-aac98956bfbd
+			defaultHierarchy: LocalDateTable_86ed1169-c322-437e-a513-55e7fb0cdb89.'Date Hierarchy'
+
+		annotation UnderlyingDateTimeDataType = Date
+
+	column 'Ship Mode'
+		dataType: string
+		lineageTag: 613e2541-06d2-429c-bdd7-5b6324702f05
+		summarizeBy: none
+		sourceColumn: Ship Mode
+
+	column 'Customer ID'
+		dataType: string
+		lineageTag: b7e39f19-8bf1-4263-bc5e-c7fd3030ec0a
+		summarizeBy: none
+		sourceColumn: Customer ID
+
+	column 'Customer Name'
+		dataType: string
+		lineageTag: d834b37a-92d1-4679-a957-7ff0dcc039f4
+		summarizeBy: none
+		sourceColumn: Customer Name
+
+	column Segment
+		dataType: string
+		lineageTag: 29f5abfa-330d-4b8c-bdd2-d3b5721fe205
+		summarizeBy: none
+		sourceColumn: Segment
+
+	column Market
+		dataType: string
+		lineageTag: 1078f2d4-9c34-4e41-aae7-8bf787d3e255
+		summarizeBy: none
+		sourceColumn: Market
+
+	column Region
+		dataType: string
+		lineageTag: 4cfe55a6-c4fd-4cfb-965c-08ed7fdd0367
+		summarizeBy: none
+		sourceColumn: Region
+
+	column 'Product ID'
+		dataType: string
+		lineageTag: 7af5a3ea-1569-4210-a045-125c2d19a35b
+		summarizeBy: none
+		sourceColumn: Product ID
+
+	column Category
+		dataType: string
+		lineageTag: b7ace1d3-019f-46c2-8424-d90e342be2ca
+		summarizeBy: none
+		sourceColumn: Category
+
+	column Sub-Category
+		dataType: string
+		lineageTag: 833c9573-1ea1-4ce8-9601-cb3fa64dfc1a
+		summarizeBy: none
+		sourceColumn: Sub-Category
+
+	column 'Product Name'
+		dataType: string
+		lineageTag: 0b712785-18d3-4380-bb1b-e793b02d0190
+		summarizeBy: none
+		sourceColumn: Product Name
+
+	column Sales
+		dataType: double
+		formatString: $#,0.00
+		lineageTag: e3fbdd1d-ff98-4cc8-90c6-f1434120bcd1
+		summarizeBy: sum
+		sourceColumn: Sales
+
+	column Quantity
+		dataType: int64
+		formatString: #,0
+		lineageTag: a8aa27f8-8284-42d9-abd4-e85cd82e5703
+		summarizeBy: sum
+		sourceColumn: Quantity
+
+	column Discount
+		dataType: double
+		formatString: 0%
+		lineageTag: 65134bd4-a7de-4e00-8e34-826fdb6e5f13
+		summarizeBy: sum
+		sourceColumn: Discount
+
+		annotation SummarizationSetBy = Automatic
+
+	column Profit
+		dataType: double
+		formatString: $#,0.00
+		lineageTag: 03260928-05ae-4a10-b241-41a38879e76b
+		summarizeBy: sum
+		sourceColumn: Profit
+
+	column 'Shipping Cost'
+		dataType: double
+		formatString: $#,0.00
+		lineageTag: a7c1f091-ee3d-4a13-811a-cdfd5bacb280
+		summarizeBy: sum
+		sourceColumn: Shipping Cost
+
+	column Returned
+		dataType: string
+		lineageTag: 64ee97a3-8e67-485d-bc0b-5b4643a71819
+		summarizeBy: none
+		sourceColumn: Returned
+
+	column 'Returned Flag'
+		dataType: int64
+		formatString: 0
+		lineageTag: a298c050-1122-49f5-9308-aa1c214d7bce
+		summarizeBy: sum
+		sourceColumn: Returned Flag
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Profit Margin %'
+		dataType: double
+		formatString: 0.0%
+		lineageTag: 033f828f-a676-4336-a00e-7c1cce39c7a4
+		summarizeBy: sum
+		sourceColumn: Profit Margin %
+
+		annotation SummarizationSetBy = Automatic
+
+	column Year
+		dataType: int64
+		formatString: 0
+		lineageTag: 30a081fe-7abb-4963-87fe-24791bb50e0f
+		summarizeBy: sum
+		sourceColumn: Year
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Month Start'
+		dataType: dateTime
+		formatString: mmm yyyy
+		lineageTag: e1250312-d4c6-4007-9524-70600878e2e8
+		summarizeBy: none
+		sourceColumn: Month Start
+
+		variation Variation
+			isDefault
+			relationship: b162880a-b6be-451f-a57b-5cc7d41aff48
+			defaultHierarchy: LocalDateTable_624870a2-94ae-4638-b2ac-a8abde4bc54c.'Date Hierarchy'
+
+		annotation UnderlyingDateTimeDataType = Date
+
+	column 'Discount Band' = SWITCH(TRUE(), Orders[Discount] = 0, "0% (None)", Orders[Discount] <= 0.2, "1-20%", Orders[Discount] <= 0.4, "21-40%", "41%+")
+		dataType: string
+		lineageTag: 50fe89c1-56ae-4a01-8af2-599fa672c31c
+		summarizeBy: none
+
+	partition Orders = m
+		mode: import
+		source =
+				let
+					Source = Excel.Workbook(File.Contents(Text.Trim(Text.Remove(FilePath, {"""", "#(lf)", "#(cr)"}))), null, true),
+					OrdersRaw = Table.PromoteHeaders(Source{[Item="Orders", Kind="Sheet"]}[Data], [PromoteAllScalars=true]),
+					ReturnsRaw = Table.Distinct(Table.PromoteHeaders(Source{[Item="Returns", Kind="Sheet"]}[Data], [PromoteAllScalars=true]), {"Order ID"}),
+					Typed = Table.TransformColumnTypes(OrdersRaw, {{"Order Date", type date}, {"Ship Date", type date}, {"Sales", type number}, {"Profit", type number}, {"Quantity", Int64.Type}, {"Discount", type number}, {"Shipping Cost", type number}}),
+					Merged = Table.NestedJoin(Typed, {"Order ID"}, ReturnsRaw, {"Order ID"}, "R", JoinKind.LeftOuter),
+					Expanded = Table.ExpandTableColumn(Merged, "R", {"Returned"}, {"Returned"}),
+					FilledReturned = Table.ReplaceValue(Expanded, null, "No", Replacer.ReplaceValue, {"Returned"}),
+					AddFlag = Table.AddColumn(FilledReturned, "Returned Flag", each if [Returned] = "Yes" then 1 else 0, Int64.Type),
+					AddMargin = Table.AddColumn(AddFlag, "Profit Margin %", each if [Sales] = 0 then null else [Profit] / [Sales], type number),
+					AddYear = Table.AddColumn(AddMargin, "Year", each Date.Year([Order Date]), Int64.Type),
+					AddMonth = Table.AddColumn(AddYear, "Month Start", each Date.StartOfMonth([Order Date]), type date),
+					Final = Table.SelectColumns(AddMonth, {"Order ID", "Order Date", "Ship Date", "Ship Mode", "Customer ID", "Customer Name", "Segment", "Market", "Region", "Product ID", "Category", "Sub-Category", "Product Name", "Sales", "Quantity", "Discount", "Profit", "Shipping Cost", "Returned", "Returned Flag", "Profit Margin %", "Year", "Month Start"})
+				in
+					Final
+
